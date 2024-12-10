@@ -9,12 +9,14 @@ namespace Program_language
         {
             try
             {
-                if (args.Length != 1 || Path.GetExtension(args[0]) != ".pl")
+                if ((args.Length is not (1 or 2)) || Path.GetExtension(args[0]) is not ".pl")
                 {
-                    throw new ArgumentException("Usage:  <path to this program> file.pl", nameof(args));
+                    throw new ArgumentException("Usage:  <path to this program> file.pl\n" +
+                                                "Flags:  --create                     - Creates a file with the code that the interpreter actually executed.", nameof(args));
                 }
+                bool createPlRuined = args.Length is 2 && args[1] is "--create";
                 Interpreter interpreter = new();
-                interpreter.Interpret(args[0]);
+                interpreter.Interpret(args[0], createPlRuined: createPlRuined);
             }
             catch (Exception ex)
             {
