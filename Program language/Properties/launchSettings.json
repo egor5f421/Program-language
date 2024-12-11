@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Program language": {
+      "commandName": "Project",
+      "commandLineArgs": "prog.pl --create"
+    }
+  }
+}

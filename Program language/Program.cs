@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace Program_language
 {
@@ -9,7 +8,7 @@ namespace Program_language
         {
             try
             {
-                if ((args.Length is not (1 or 2)) || Path.GetExtension(args[0]) is not ".pl")
+                if ((args.Length is not (1 or 2)) || System.IO.Path.GetExtension(args[0]) is not ".pl")
                 {
                     throw new ArgumentException("Usage:  <path to this program> file.pl\n" +
                                                 "Flags:  --create                     - Creates a file with the code that the interpreter actually executed.", nameof(args));

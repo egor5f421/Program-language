@@ -1,153 +1,40 @@
-﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using Program_language.Exceptions;
+using System;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using Program_language.Exceptions;
 using InvalidOperationException = Program_language.Exceptions.InvalidOperationException;
 
 namespace Program_language
 {
-    internal partial class Interpreter()
+    /// <summary>
+    /// Interpreter for code execution
+    /// </summary>
+    public partial class Interpreter
     {
-        private readonly Stack<long> stack = new();
+        /// <summary>
+        /// Stack
+        /// </summary>
+        public readonly Stack<long> stack = new();
 
-        private readonly Variables variables = [];
-        private long Register
+        /// <summary>
+        /// Variables declared in the code
+        /// </summary>
+        public readonly Variables variables = [];
+        /// <summary>
+        /// Register
+        /// </summary>
+        public long Register
         {
             get => variables["R"];
             set => variables["R"] = value;
         }
 
-        private static bool CheckSyntax(Command command, string[] args, out string syntaxError)
-        {
-            switch (command)
-            {
-                case Command.ADD:
-                case Command.SUB:
-                case Command.DIV:
-                case Command.MUL:
-                case Command.PUSH:
-                case Command.POP:
-                case Command.INPUT:
-                case Command.PRINT:
-                    if (args.Length is not 0)
-                    {
-                        syntaxError = string.Format(Excepts.noArgs, command); return false;
-                    }
-                    break;
-                case Command.JMP:
-                case Command.LABEL:
-                    if (args.Length is not 1)
-                    {
-                        syntaxError = string.Format(Excepts.valueNotExist, command); return false;
-                    }
-                    break;
-                case Command.LDI:
-                    if (args.Length != 1)
-                    {
-                        syntaxError = string.Format(Excepts.valueNotExist, command); return false;
-                    }
-                    break;
-                case Command.VAR:
-                    if (args.Length != 3 || args[1] != "=")
-                    {
-                        syntaxError = string.Format(Excepts.newVarValue, command); return false;
-                    }
-                    break;
-            }
-            syntaxError = string.Empty;
-            return true;
-        }
+        internal static Func<long> Input = static () => { while (true) if (long.TryParse(Console.ReadLine(), out long value)) return value; };
+        internal static Action<long> Print = Console.WriteLine;
 
-        private int ExecuteCommand(string operation, int line, params string[] args)
-        {
-            if (!Enum.TryParse(operation.ToUpper(), out Command command))
-            {
-                string errorMessage = string.Format(Excepts.operationNotExist, operation);
-                throw new InvalidOperationException(errorMessage, line);
-            }
-
-            if (!CheckSyntax(command, args, out string syntaxError))
-                throw new InvalidOperationException(syntaxError, line);
-
-            switch (command)
-            {
-                case Command.ADD: Register += stack.Pop(); break;
-                case Command.SUB: Register -= stack.Pop(); break;
-                case Command.DIV: Register /= stack.Pop(); break;
-                case Command.MUL: Register *= stack.Pop(); break;
-
-                case Command.PUSH: stack.Push(Register); break;
-                case Command.POP: Register = stack.Pop(); break;
-
-                case Command.INPUT: Register = Input(); break;
-                case Command.PRINT: Print(Register); break;
-
-                case Command.LDI: Register = GetValue(args[0], line); break;
-                case Command.VAR: variables[args[0]] = GetValue(args[2], line); break;
-
-                case Command.JMP: return (int)GetValue(args[0], line);
-                case Command.LABEL: variables[args[0]] = line; break;
-            }
-
-            return line;
-        }
-
-        public static bool CheckPseudoSyntax(PseudoCommand command, string[] args)
-        {
-            switch (command)
-            {
-                case PseudoCommand.ADD:
-                case PseudoCommand.SUB:
-                case PseudoCommand.MUL:
-                case PseudoCommand.DIV:
-                    if (args.Length != 1) return false;
-                    break;
-
-                case PseudoCommand.PUSH:
-                case PseudoCommand.POP:
-                    if (args.Length != 1) return false;
-                    break;
-            }
-            return true;
-        }
-
-        public static string PseudoOperation(string operation, params string[] args)
-        {
-            operation = operation switch
-            {
-                "+" => PseudoCommand.ADD.ToString(),
-                "-" => PseudoCommand.SUB.ToString(),
-                "*" => PseudoCommand.MUL.ToString(),
-                "/" => PseudoCommand.DIV.ToString(),
-                _ => operation,
-            };
-            if ( args.Length == 2 && args[0].Equals("=", StringComparison.CurrentCultureIgnoreCase)) {
-                return $"VAR {operation} = {args[1]};";
-            }
-            string old = operation + (args.Length != 0 ? " " + string.Join(' ', args) : string.Empty);
-            return !Enum.TryParse(operation.ToUpper(), out PseudoCommand command) || !CheckPseudoSyntax(command, args)
-                ? old
-                : command switch
-            {
-                PseudoCommand.ADD or PseudoCommand.SUB or PseudoCommand.MUL or PseudoCommand.DIV => $"VAR TEMP = R; LDI {args[0]}; PUSH; LDI TEMP; {command};",
-                PseudoCommand.PUSH => $"VAR TEMP = R; LDI {args[0]}; {command}; LDI TEMP;",
-                PseudoCommand.POP => $"VAR TEMP = R; {command}; {args[0]} = R; LDI TEMP;",
-                _ => old,
-            };
-        }
-
-        public static Func<long> Input = static () => { while (true) if (long.TryParse(Console.ReadLine(), out long value)) return value; };
-        public static Action<long> Print = Console.WriteLine;
-
-        private long GetValue(string name, int line) =>
-            GetValue(name, out long value)
-                        ? value
-                        : throw new InvalidOperationException(string.Format(Excepts.varOrLabelNotExist, name), line);
+        private long GetValue(string name, int line) => GetValue(name, out long value)
+            ? value
+            : throw new InvalidOperationException(string.Format(Excepts.varOrLabelNotExist, name), line);
         private bool GetValue(string name, out long value) =>
             long.TryParse(name, out value) || variables.TryGetValue(name, out value);
 
@@ -174,7 +61,7 @@ namespace Program_language
                 lines[i] = pseudoCommandHandler(words[0], words[1..^0]);
             }
 
-            if (createPlRuined) File.WriteAllLines(Path.ChangeExtension(filePath, ".pl_ruined"), lines);
+            if (createPlRuined) File.WriteAllLines(filePath + "_", lines);
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i].Trim();
@@ -193,7 +80,7 @@ namespace Program_language
             }
         }
 
-        [GeneratedRegex(@"(//((?!$).)*)|(/\*(((?!\*/).)*)\*/)", RegexOptions.Multiline | RegexOptions.Singleline)]
+        [GeneratedRegex(@"(//((?!$).)*)|(/\*(((?!\*/).)*)\*/)", RegexOptions.Singleline | RegexOptions.Multiline)]
         private static partial Regex DeleteComments();
     }
 }

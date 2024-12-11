@@ -4,8 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Program_language
 {
+    /// <summary>
+    /// A class for storing variables
+    /// </summary>
     public class Variables : Dictionary<string, long>
     {
+        /// <inheritdoc/>
         public new long this[string key]
         {
             get
@@ -19,8 +23,9 @@ namespace Program_language
             }
         }
 
-        public Variables() : base([new("R", 0)]) { }
+        internal Variables() : base([new("R", 0)]) { }
 
+        /// <inheritdoc/>
         public new bool TryGetValue(string key, [MaybeNullWhen(false)] out long value)
         {
             if (key.Equals(Command.INPUT.ToString(), StringComparison.CurrentCultureIgnoreCase))

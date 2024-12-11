@@ -1,6 +1,6 @@
 ﻿namespace Program_language.Exceptions
 {
-    public static class Excepts
+    internal static class Excepts
     {
         //public const string variableValue = "The value of the variable must be a number, a variable, or R";
         public const string noArgs = "Nothing should go after the {0} command";
