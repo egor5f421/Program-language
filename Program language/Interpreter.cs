@@ -1,6 +1,5 @@
 ﻿using Program_language.Exceptions;
-using System;
-using System.IO;
+using System.Data;
 using System.Text.RegularExpressions;
 using InvalidOperationException = Program_language.Exceptions.InvalidOperationException;
 
@@ -9,12 +8,17 @@ namespace Program_language
     /// <summary>
     /// Interpreter for code execution
     /// </summary>
-    public partial class Interpreter
+    /// <remarks>
+    /// Creates an interpreter
+    /// </remarks>
+    /// <param name="Code">Code for interpretation</param>
+    public partial class Interpreter(string Code)
     {
+        private readonly string fileContent = Code;
         /// <summary>
         /// Stack
         /// </summary>
-        public readonly Stack<long> stack = new();
+        public Stack<long> stack = new();
 
         /// <summary>
         /// Variables declared in the code
@@ -36,32 +40,47 @@ namespace Program_language
             ? value
             : throw new InvalidOperationException(string.Format(Excepts.varOrLabelNotExist, name), line);
         private bool GetValue(string name, out long value) =>
-            long.TryParse(name, out value) || variables.TryGetValue(name, out value);
+            long.TryParse(name, out value) || variables.TryGetValue(name, out value) || TryMathOperation(name, out value);
+        private bool TryMathOperation(string operation, out long value)
+        {
+            foreach (var variable in variables.Keys)
+                operation = operation.Replace(variable, variables[variable].ToString());
+            try
+            {
+                value = Convert.ToInt64(new DataTable().Compute(operation, null));
+            } catch { value = 0; return false; }
+            return true;
+        }
 
-        internal void Interpret(string filePath,
-                                Func<string, int, string[], int>? commandHandler = null,
-                                Func<string, string[], string>? pseudoCommandHandler = null,
-                                char newLineSeparator = '\n',
-                                char commandSeparator = ';',
-                                bool createPlRuined = false)
+        /// <summary>
+        /// Interpret code
+        /// </summary>
+        /// <param name="commandHandler">Command handler</param>
+        /// <param name="pseudoCommandHandler">Pseudo command handler</param>
+        /// <param name="newLineSeparator">Line separator</param>
+        /// <param name="commandSeparator">Command separator</param>
+        public void Interpret(Func<string, int, string[], int>? commandHandler = null,
+                              Func<string, string[], string>? pseudoCommandHandler = null,
+                              char newLineSeparator = '\n',
+                              char commandSeparator = ';')
         {
             commandHandler ??= ExecuteCommand;
             pseudoCommandHandler ??= PseudoOperation;
 
-            string fileContent = File.ReadAllText(filePath).Replace("\r", string.Empty);
+            string fileContent = this.fileContent.Replace("\r", string.Empty);
             fileContent = DeleteComments().Replace(fileContent, string.Empty);
+            fileContent = DeleteExtraSpaces().Replace(fileContent, string.Empty);
             string[] oldLines = fileContent.Split(newLineSeparator, StringSplitOptions.TrimEntries);
             string[] lines = new string[oldLines.Length];
 
             for (int i = 0; i < oldLines.Length; i++)
             {
-                string[] words = oldLines[i].Split(' ');//, StringSplitOptions.RemoveEmptyEntries);
+                string[] words = oldLines[i].Split(' ');
                 if (words.Length == 0) continue;
 
                 lines[i] = pseudoCommandHandler(words[0], words[1..^0]);
             }
 
-            if (createPlRuined) File.WriteAllLines(filePath + "_", lines);
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i].Trim();
@@ -82,5 +101,8 @@ namespace Program_language
 
         [GeneratedRegex(@"(//((?!$).)*)|(/\*(((?!\*/).)*)\*/)", RegexOptions.Singleline | RegexOptions.Multiline)]
         private static partial Regex DeleteComments();
+
+        [GeneratedRegex(@" +(?=[+-/*])|(?<=[+-/*])\s+(?=.+>)|>")]
+        private static partial Regex DeleteExtraSpaces();
     }
 }

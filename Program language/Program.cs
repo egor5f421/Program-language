@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Program_language
+﻿namespace Program_language
 {
     internal class Program
     {
@@ -8,14 +6,10 @@ namespace Program_language
         {
             try
             {
-                if ((args.Length is not (1 or 2)) || System.IO.Path.GetExtension(args[0]) is not ".pl")
-                {
-                    throw new ArgumentException("Usage:  <path to this program> file.pl\n" +
-                                                "Flags:  --create                     - Creates a file with the code that the interpreter actually executed.", nameof(args));
-                }
-                bool createPlRuined = args.Length is 2 && args[1] is "--create";
-                Interpreter interpreter = new();
-                interpreter.Interpret(args[0], createPlRuined: createPlRuined);
+                if (args.Length is not 1)
+                    throw new ArgumentException($"""Usage:  "{Environment.ProcessPath}" <file's path>""");
+                Interpreter interpreter = new(File.ReadAllText(args[0]).Replace("\r", ""));
+                interpreter.Interpret();
             }
             catch (Exception ex)
             {
