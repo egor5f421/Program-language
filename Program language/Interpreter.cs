@@ -8,13 +8,9 @@ namespace Program_language
     /// <summary>
     /// Interpreter for code execution
     /// </summary>
-    /// <remarks>
-    /// Creates an interpreter
-    /// </remarks>
-    /// <param name="Code">Code for interpretation</param>
-    public partial class Interpreter(string Code)
+    public partial class Interpreter
     {
-        private readonly string fileContent = Code;
+        private readonly string fileContent;
         /// <summary>
         /// Stack
         /// </summary>
@@ -35,6 +31,17 @@ namespace Program_language
 
         internal static Func<long> Input = static () => { while (true) if (long.TryParse(Console.ReadLine(), out long value)) return value; };
         internal static Action<long> Print = Console.WriteLine;
+
+        /// <summary>
+        /// Creates an interpreter
+        /// </summary>
+        /// <param name="Code">Code for interpretation</param>
+        public Interpreter(string Code)
+        {
+            fileContent = Code.Replace("\r", string.Empty);
+            fileContent = DeleteComments().Replace(fileContent, string.Empty);
+            fileContent = DeleteExtraSpaces().Replace(fileContent, string.Empty);
+        }
 
         private long GetValue(string name, int line) => GetValue(name, out long value)
             ? value
@@ -67,9 +74,6 @@ namespace Program_language
             commandHandler ??= ExecuteCommand;
             pseudoCommandHandler ??= PseudoOperation;
 
-            string fileContent = this.fileContent.Replace("\r", string.Empty);
-            fileContent = DeleteComments().Replace(fileContent, string.Empty);
-            fileContent = DeleteExtraSpaces().Replace(fileContent, string.Empty);
             string[] oldLines = fileContent.Split(newLineSeparator, StringSplitOptions.TrimEntries);
             string[] lines = new string[oldLines.Length];
 
@@ -102,7 +106,7 @@ namespace Program_language
         [GeneratedRegex(@"(//((?!$).)*)|(/\*(((?!\*/).)*)\*/)", RegexOptions.Singleline | RegexOptions.Multiline)]
         private static partial Regex DeleteComments();
 
-        [GeneratedRegex(@" +(?=[+-/*])|(?<=[+-/*])\s+(?=.+>)|>")]
+        [GeneratedRegex(@" +(?=[+\-/*])|(?<=[+\-/*])\s+(?=.+>)|>")]
         private static partial Regex DeleteExtraSpaces();
     }
 }
