@@ -1,26 +1,26 @@
+func printStack
+pop
+print
+end
+
 var in1 = input
 var in2 = input
 
-ldi in1
-+ in2
+ldi in1+in2
 var a = R
 
-ldi in1
-- in2
-var b = R
+var b = in1-in2
 
-ldi in1
-* in2
+ldi in1 * in2>
 var c = R
 
-ldi in1
-/ in2
-var d = R
+var d = in1 / in2>
 
-var e = in1 + in2>
-
-print = a
-print = b
-print = c
-print = d
-print = e
+push a
+call printStack
+push b
+call printStack
+push c
+call printStack
+push d
+call printStack

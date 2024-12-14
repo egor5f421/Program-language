@@ -12,18 +12,18 @@ namespace Program_language
                 case PseudoCommand.SUB:
                 case PseudoCommand.MUL:
                 case PseudoCommand.DIV:
-                    if (args.Length != 1) return false;
+                    if (args.Length is not 1) return false;
                     break;
 
                 case PseudoCommand.PUSH:
                 case PseudoCommand.POP:
-                    if (args.Length != 1) return false;
+                    if (args.Length is not 1) return false;
                     break;
             }
             return true;
         }
 
-        public static bool CheckSyntax(Command command, string[] args, out string syntaxError)
+        public static bool CheckSyntax(Command command, string[] args, out string syntaxError, Dictionary<string, Function> functions)
         {
             switch (command)
             {
@@ -31,15 +31,20 @@ namespace Program_language
                 case Command.SUB:
                 case Command.DIV:
                 case Command.MUL:
+
                 case Command.PUSH:
                 case Command.POP:
+
                 case Command.INPUT:
                 case Command.PRINT:
+
+                case Command.END:
                     if (args.Length is not 0)
                     {
                         syntaxError = string.Format(Excepts.noArgs, command); return false;
                     }
                     break;
+
                 case Command.JMP:
                 case Command.LABEL:
                     if (args.Length is not 1)
@@ -47,16 +52,34 @@ namespace Program_language
                         syntaxError = string.Format(Excepts.valueNotExist, command); return false;
                     }
                     break;
+
                 case Command.LDI:
-                    if (args.Length != 1)
+                    if (args.Length is not 1)
                     {
                         syntaxError = string.Format(Excepts.valueNotExist, command); return false;
                     }
                     break;
                 case Command.VAR:
-                    if (args.Length != 3 || args[1] != "=")
+                    if (args.Length is not 3 || args[1] is not "=")
                     {
                         syntaxError = string.Format(Excepts.newVarValue, command); return false;
+                    }
+                    break;
+
+                case Command.FUNC:
+                    if (args.Length is not 1)
+                    {
+                        syntaxError = string.Format(Excepts.functionNameNotExist, args[0]); return false;
+                    }
+                    if (functions.ContainsKey(args[0]))
+                    {
+                        syntaxError = string.Format(Excepts.functionNameExist, args[0]); return false;
+                    }
+                    break;
+                case Command.CALL:
+                    if (args.Length is not 1 || !functions.ContainsKey(args[0]))
+                    {
+                        syntaxError = string.Format(Excepts.functionNameNotExist, args[0]); return false;
                     }
                     break;
             }

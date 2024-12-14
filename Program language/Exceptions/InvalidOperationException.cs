@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Program_language.Exceptions
+﻿namespace Program_language.Exceptions
 {
     [Serializable]
     internal class InvalidOperationException(string message, int line) : Exception($"{message.Trim()} (Line {line})")

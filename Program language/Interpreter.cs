@@ -15,6 +15,9 @@ namespace Program_language
         /// Stack
         /// </summary>
         public Stack<long> stack = new();
+        public Function currentFunction = new(0, 0);
+        public Dictionary<string, Function> functions = [];
+        public string[] lines = [];
 
         /// <summary>
         /// Variables declared in the code
@@ -41,6 +44,7 @@ namespace Program_language
             fileContent = Code.Replace("\r", string.Empty);
             fileContent = DeleteComments().Replace(fileContent, string.Empty);
             fileContent = DeleteExtraSpaces().Replace(fileContent, string.Empty);
+            fileContent = fileContent.ToUpper();
         }
 
         private long GetValue(string name, int line) => GetValue(name, out long value)
@@ -55,7 +59,8 @@ namespace Program_language
             try
             {
                 value = Convert.ToInt64(new DataTable().Compute(operation, null));
-            } catch { value = 0; return false; }
+            }
+            catch { value = 0; return false; }
             return true;
         }
 
@@ -74,7 +79,7 @@ namespace Program_language
             commandHandler ??= ExecuteCommand;
             pseudoCommandHandler ??= PseudoOperation;
 
-            string[] oldLines = fileContent.Split(newLineSeparator, StringSplitOptions.TrimEntries);
+            string[] oldLines = fileContent.Split(newLineSeparator);//, StringSplitOptions.TrimEntries);
             string[] lines = new string[oldLines.Length];
 
             for (int i = 0; i < oldLines.Length; i++)
@@ -84,7 +89,7 @@ namespace Program_language
 
                 lines[i] = pseudoCommandHandler(words[0], words[1..^0]);
             }
-
+            this.lines = lines;
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i].Trim();

@@ -1,6 +1,4 @@
 ﻿using Program_language.Exceptions;
-using System;
-using System.Collections;
 using InvalidOperationException = Program_language.Exceptions.InvalidOperationException;
 
 namespace Program_language
@@ -25,8 +23,8 @@ namespace Program_language
             };
             if (args.Length == 2 && args[0].Equals("=", StringComparison.CurrentCultureIgnoreCase))
                 return $"VAR {operation} = {args[1]};";
-            string old = operation + (args.Length != 0 ? string.Join(' ', [" ", .. args]) : string.Empty);
-            return !Enum.TryParse(operation.ToUpper(), out PseudoCommand command) || !Syntax.CheckPseudoSyntax(command, args)
+            string old = operation + (args.Length != 0 ? " " + string.Join(' ', args) : string.Empty);
+            return !Enum.TryParse(operation, out PseudoCommand command) || !Syntax.CheckPseudoSyntax(command, args)
                 ? old
                 : command switch
                 {
@@ -47,13 +45,13 @@ namespace Program_language
         /// <exception cref="InvalidOperationException">Throw if invalid operation</exception>
         public int ExecuteCommand(string operation, int line, params string[] args)
         {
-            if (!Enum.TryParse(operation.ToUpper(), out Command command))
+            if (!Enum.TryParse(operation, out Command command))
             {
                 string errorMessage = string.Format(Excepts.operationNotExist, operation);
                 throw new InvalidOperationException(errorMessage, line);
             }
 
-            if (!Syntax.CheckSyntax(command, args, out string syntaxError))
+            if (!Syntax.CheckSyntax(command, args, out string syntaxError, functions))
                 throw new InvalidOperationException(syntaxError, line);
 
             switch (command)
@@ -74,6 +72,10 @@ namespace Program_language
 
                 case Command.JMP: return (int)GetValue(args[0], line);
                 case Command.LABEL: variables[args[0]] = line; break;
+
+                case Command.FUNC: functions[args[0]] = new(line, 0); return Function.ToEnd(lines, line, false);
+                case Command.END: return currentFunction.Return();
+                case Command.CALL: return functions[args[0]].Call(line, out currentFunction);
             }
 
             return line;

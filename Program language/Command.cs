@@ -77,6 +77,10 @@
         /// Switching to line
         /// </summary>
         JMP,
+
+        FUNC,
+        CALL,
+        END,
     }
     /// <summary>
     /// Pseudo command
