@@ -15,8 +15,17 @@ namespace Program_language
         /// Stack
         /// </summary>
         public Stack<long> stack = new();
+        /// <summary>
+        /// Current function
+        /// </summary>
         public Function currentFunction = new(0, 0);
+        /// <summary>
+        /// Functions
+        /// </summary>
         public Dictionary<string, Function> functions = [];
+        /// <summary>
+        /// Lines with a code
+        /// </summary>
         public string[] lines = [];
 
         /// <summary>

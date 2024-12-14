@@ -78,8 +78,17 @@
         /// </summary>
         JMP,
 
+        /// <summary>
+        /// The command to create a function
+        /// </summary>
         FUNC,
+        /// <summary>
+        /// The command to call the function
+        /// </summary>
         CALL,
+        /// <summary>
+        /// The command indicating the end of the function
+        /// </summary>
         END,
     }
     /// <summary>
