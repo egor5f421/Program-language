@@ -11,7 +11,13 @@
         public const string operationNotExist = "This operation does not exist: {0}";
         public const string valueNotExist = "The command {0} is followed by the value";
         public const string commentInComment = "You cannot create a comment in a comment";
-        public const string functionNameNotExist = "The {0} function does not exist";
-        public const string functionNameExist = "The {0} function already exists";
+        public const string functionNotExist = "The {0} function does not exist";
+        public const string functionNameNotExist = "The {0} command is followed by the function name and arguments";
+        public const string functionExist = "The {0} function already exists";
+        public const string wrongNumberOfArguments = "The wrong number of arguments was passed";
+        public static string curlBracesNotClosed = string.Format(curlBraces, "closed");
+        public static string curlBracesNotOpened = string.Format(curlBraces, "open");
+
+        private const string curlBraces = "Not all curly braces are {0}";
     }
 }

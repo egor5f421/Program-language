@@ -19,7 +19,7 @@ namespace Program_language
                 "-" => PseudoCommand.SUB.ToString(),
                 "*" => PseudoCommand.MUL.ToString(),
                 "/" => PseudoCommand.DIV.ToString(),
-                _ => operation,
+                _ => operation.ToUpper(),
             };
             if (args.Length == 2 && args[0].Equals("=", StringComparison.CurrentCultureIgnoreCase))
                 return $"VAR {operation} = {args[1]};";
@@ -45,11 +45,10 @@ namespace Program_language
         /// <exception cref="InvalidOperationException">Throw if invalid operation</exception>
         public int ExecuteCommand(string operation, int line, params string[] args)
         {
+            if (operation == "{") return line;
+            if (operation == "}") operation = "END";
             if (!Enum.TryParse(operation, out Command command))
-            {
-                string errorMessage = string.Format(Excepts.operationNotExist, operation);
-                throw new InvalidOperationException(errorMessage, line);
-            }
+                throw new InvalidOperationException(string.Format(Excepts.operationNotExist, operation), line);
 
             if (!Syntax.CheckSyntax(command, args, out string syntaxError, functions))
                 throw new InvalidOperationException(syntaxError, line);
@@ -68,14 +67,14 @@ namespace Program_language
                 case Command.PRINT: Print(Register); break;
 
                 case Command.LDI: Register = GetValue(args[0], line); break;
-                case Command.VAR: variables[args[0]] = GetValue(args[2], line); break;
+                case Command.VAR: SetVariable(args[0], GetValue(args[2], line)); break;
 
                 case Command.JMP: return (int)GetValue(args[0], line);
-                case Command.LABEL: variables[args[0]] = line; break;
+                case Command.LABEL: SetVariable(args[0], line); break;
 
-                case Command.FUNC: functions[args[0]] = new(line, 0); return Function.ToEnd(lines, line, false);
+                case Command.FUNC: functions[args[0]] = new(line, 0, new(args[1..^0].ToDictionary(s => s, s => 0L)), lines); return functions[args[0]].ToEnd(false);
                 case Command.END: return currentFunction.Return();
-                case Command.CALL: return functions[args[0]].Call(line, out currentFunction);
+                case Command.CALL: return functions[args[0]].Call(line, out currentFunction, args[1..^0].Select(s => GetValue(s, line)));
             }
 
             return line;

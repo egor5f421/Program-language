@@ -1,10 +1,12 @@
-func printStack
-pop
-print
-end
+func printStack plusNum
+{
+    pop
+    print = R + plusNum>
+}
 
 var in1 = input
 var in2 = input
+var plus = input
 
 ldi in1+in2
 var a = R
@@ -17,10 +19,10 @@ var c = R
 var d = in1 / in2>
 
 push a
-call printStack
+call printStack plus
 push b
-call printStack
+call printStack plus
 push c
-call printStack
+call printStack plus
 push d
-call printStack
+call printStack plus

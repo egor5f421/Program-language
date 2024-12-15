@@ -18,7 +18,7 @@ namespace Program_language
         /// <summary>
         /// Current function
         /// </summary>
-        public Function currentFunction = new(0, 0);
+        public Function currentFunction = new(0, 0, []);
         /// <summary>
         /// Functions
         /// </summary>
@@ -31,14 +31,14 @@ namespace Program_language
         /// <summary>
         /// Variables declared in the code
         /// </summary>
-        public readonly Variables variables = [];
+        public readonly Variables variables = new() { ["R"] = 0 };
         /// <summary>
         /// Register
         /// </summary>
         public long Register
         {
-            get => variables["R"];
-            set => variables["R"] = value;
+            get => GetValue("R", 0);
+            set => SetVariable("R", value);
         }
 
         internal static Func<long> Input = static () => { while (true) if (long.TryParse(Console.ReadLine(), out long value)) return value; };
@@ -53,24 +53,30 @@ namespace Program_language
             fileContent = Code.Replace("\r", string.Empty);
             fileContent = DeleteComments().Replace(fileContent, string.Empty);
             fileContent = DeleteExtraSpaces().Replace(fileContent, string.Empty);
-            fileContent = fileContent.ToUpper();
         }
 
         private long GetValue(string name, int line) => GetValue(name, out long value)
             ? value
             : throw new InvalidOperationException(string.Format(Excepts.varOrLabelNotExist, name), line);
         private bool GetValue(string name, out long value) =>
-            long.TryParse(name, out value) || variables.TryGetValue(name, out value) || TryMathOperation(name, out value);
+            long.TryParse(name, out value) || currentFunction.Arguments.TryGetValue(name, out value) || variables.TryGetValue(name, out value) || TryMathOperation(name, out value);
         private bool TryMathOperation(string operation, out long value)
         {
+            foreach (var variable in currentFunction.Arguments.Keys)
+                operation = operation.Replace(variable, GetValue(variable, 0).ToString());
             foreach (var variable in variables.Keys)
-                operation = operation.Replace(variable, variables[variable].ToString());
+                operation = operation.Replace(variable, GetValue(variable, 0).ToString());
             try
             {
                 value = Convert.ToInt64(new DataTable().Compute(operation, null));
             }
             catch { value = 0; return false; }
             return true;
+        }
+        private void SetVariable(string name, long value)
+        {
+            if (currentFunction.Arguments.ContainsKey(name)) { currentFunction.Arguments[name] = value; return; }
+            variables[name] = value;
         }
 
         /// <summary>
@@ -93,16 +99,20 @@ namespace Program_language
 
             for (int i = 0; i < oldLines.Length; i++)
             {
-                string[] words = oldLines[i].Split(' ');
+                string[] words = oldLines[i].Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 if (words.Length == 0) continue;
 
                 lines[i] = pseudoCommandHandler(words[0], words[1..^0]);
             }
             this.lines = lines;
+#if DEBUG
+            File.WriteAllLines("debug.pl", lines);
+#endif
             for (int i = 0; i < lines.Length; i++)
             {
-                string line = lines[i].Trim();
+                string line = lines[i];
                 if (string.IsNullOrWhiteSpace(line)) continue;
+                line = line.Trim();
 
                 foreach (string command in line.Split(commandSeparator, StringSplitOptions.RemoveEmptyEntries))
                 {

@@ -67,19 +67,23 @@ namespace Program_language
                     break;
 
                 case Command.FUNC:
-                    if (args.Length is not 1)
+                    if (args.Length <= 0)
                     {
-                        syntaxError = string.Format(Excepts.functionNameNotExist, args[0]); return false;
+                        syntaxError = string.Format(Excepts.functionNameNotExist, command); return false;
                     }
                     if (functions.ContainsKey(args[0]))
                     {
-                        syntaxError = string.Format(Excepts.functionNameExist, args[0]); return false;
+                        syntaxError = string.Format(Excepts.functionExist, args[0]); return false;
                     }
                     break;
                 case Command.CALL:
-                    if (args.Length is not 1 || !functions.ContainsKey(args[0]))
+                    if (args.Length <= 0)
                     {
-                        syntaxError = string.Format(Excepts.functionNameNotExist, args[0]); return false;
+                        syntaxError = string.Format(Excepts.functionNameNotExist, command); return false;
+                    }
+                    if (!functions.ContainsKey(args[0]))
+                    {
+                        syntaxError = string.Format(Excepts.functionNotExist, args[0]); return false;
                     }
                     break;
             }
